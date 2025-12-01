@@ -1,136 +1,147 @@
-선문PC방 가맹점 모집 웹사이트
+# 선문PC방 가맹점 모집 웹사이트
 
-데이터 기반 분석으로 예비 창업자에게 최적의 입지 정보와 인사이트를 제공하는 가맹점 모집 플랫폼입니다.
+데이터 기반 PC방 창업을 위한 종합 가맹점 모집 플랫폼
 
-🚀 주요 기능
-📊 실시간 상권 분석
+## 🎯 프로젝트 소개
 
-CSV 파일 업로드 → 즉시 7가지 핵심 분석 제공
+선문PC방 가맹점 모집 웹사이트는 빅데이터 분석을 통해 예비 창업자에게 최적의 입지 정보와 데이터 기반 인사이트를 제공하는 혁신적인 프랜차이즈 플랫폼입니다.
 
-월별 매출 추이(5~8월)
+### 주요 기능
 
-재방문율 코호트
+- **📊 실시간 데이터 분석**: CSV 파일 업로드를 통한 즉각적인 상권 분석
+- **🗺️ 카카오맵 연동**: AI가 추천하는 최적 입지를 지도에서 시각화
+- **📈 7가지 핵심 분석 차트**:
+  - 월별 매출 추이 (5-8월)
+  - 재방문율 코호트 분석
+  - 지역별 경쟁력 레이더 차트
+  - 지역별 예상 월 매출 TOP 10
+  - 연령대별 고객 분석
+  - 이용시간 vs 결제금액 상관관계
+- **💼 1:1 맞춤 상담**: 전담 컨설턴트와의 직접 상담 신청
+- **📋 가맹 절차 안내**: 6단계 타임라인 방식의 명확한 절차 가이드
 
-지역 경쟁력 레이더
+## 🛠️ 기술 스택
 
-예상 매출 TOP 10
+### Frontend
+- **Framework**: Next.js 16.0.3 (App Router + Turbopack)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Animation**: Framer Motion
+- **Charts**: Recharts
+- **Map**: Kakao Maps API
 
-연령대별 고객 분석
+### 주요 라이브러리
+- `papaparse`: CSV 파일 파싱
+- `lucide-react`: 아이콘
+- `@vercel/analytics`: 사용자 분석
 
-이용시간 vs 결제금액 상관관계
+## 📁 프로젝트 구조
 
-🗺️ 카카오맵 기반 입지 추천
-
-AI 추천 위치 자동 시각화
-
-마커/키워드 검색/인포윈도우 지원
-
-💼 가맹 상담 및 절차 안내
-
-1:1 전담 컨설턴트 상담 신청
-
-6단계 타임라인 절차 가이드
-
-🛠️ 기술 스택
-Frontend
-
-Framework: Next.js 16 (App Router + Turbopack)
-
-Language: TypeScript
-
-Styling: Tailwind CSS
-
-Animation: Framer Motion
-
-Charts: Recharts
-
-Map: Kakao Maps API
-
-Libraries
-
-papaparse – CSV 파싱
-
-lucide-react – 아이콘
-
-@vercel/analytics – 사용자 분석
-
-📁 프로젝트 구조
+```bash
 franchise-recruitment-analysis/
 ├── app/
-│   ├── page.tsx                 # 메인 페이지
-│   ├── layout.tsx               # 루트 레이아웃
-│   ├── consultation/
-│   │   └── page.tsx             # 상담 신청
-│   └── franchise-process/
-│       └── page.tsx             # 가맹 절차 안내
+│   ├── page.tsx               # 메인 랜딩 페이지 (서비스 소개)
+│   ├── dashboard/             # 분석 대시보드 페이지 (기능 핵심)
+│   ├── layout.tsx             # 루트 레이아웃
+│   ├── consultation/          # 상담 신청 페이지
+│   └── franchise-process/     # 가맹 절차 안내 페이지
 ├── components/
-│   ├── analysis-dashboard.tsx   # 데이터 분석 대시보드
-│   ├── kakao-map.tsx            # 카카오맵 컴포넌트
-│   └── ui/                      # 재사용 UI
-├── public/                      # 정적 파일
-└── .env.local                   # 환경 변수
+│   ├── dashboard/             # 대시보드 전용 컴포넌트 (Metrics 등)
+│   ├── analysis-dashboard.tsx # 대시보드 메인 조립
+│   ├── kakao-map.tsx          # 카카오맵 컴포넌트
+│   └── ui/                    # 공용 UI 컴포넌트
+├── hooks/                     # 커스텀 훅 (데이터 계산 로직 분리)
+├── .env.local                 # 환경 변수 (Kakao API 키)
+└── public/                    # 정적 파일
+🚀 시작하기
+1. 설치
+Bash
 
-🔧 설치 및 실행
-1) 설치
+# 의존성 설치
 npm install
 # 또는
 pnpm install
+2. 환경 변수 설정
+.env.local 파일을 생성하고 Kakao Maps API 키를 추가하세요:
 
-2) 환경 변수
-
-.env.local 생성 후:
+코드 스니펫
 
 NEXT_PUBLIC_KAKAO_MAP_KEY=your_kakao_map_api_key
-
-3) 개발 서버
+3. 개발 서버 실행
 npm run dev
 # 또는
 pnpm dev
+브라우저에서 http://localhost:3000을 열어 확인하세요.
 
+📊 데이터 분석 방법론
+예상 월 매출 계산 (Updated)
+TypeScript
 
-브라우저에서 → http://localhost:3000
- 확인
+예상 월 매출 = 평균 객단가 × 표준 매장 월 방문자 수(1,500명)
+객단가 산출: 업로드된 데이터의 실제 결제액 기반 평균 산출
 
-📊 분석 로직 요약
-예상 월 매출 계산
-예상 월 매출 = 평균 결제액 × max(표본 수, 50) × 30
+표준화 모델: 일반적인 PC방(약 100석 규모)의 월간 활성 사용자(MAU)를 1,500명으로 가정하여 현실적인 매출 추정
 
-재방문율 계산
+오차 보정: 기존의 단순 표본 합산 방식에서 발생하는 과다 예측 오류 수정
 
-6·7·8월 재방문 여부 집계
+지역별 경쟁력 지표
+매출 점수: 지역별 예상 월 매출 (백만원 단위)
 
-90일 장기 재방문율
+이용시간: 평균 이용시간 (10분 단위)
 
-코호트 분석 적용
+재방문율: 90일 기준 재방문율 (%)
 
-지역 경쟁력 지표
+🎨 디자인 특징
+Gradient 테마: Blue-Purple-Pink 그라데이션 일관성
 
-매출 점수
+Glassmorphism: 반투명 배경 + 백드롭 블러 효과
 
-평균 이용시간
+반응형 디자인: Mobile-First 접근방식
 
-90일 재방문율
+UX 개선: 랜딩 페이지와 기능(대시보드) 페이지 분리로 사용자 경험 최적화
 
-🎨 디자인 가이드
+📈 데이터 무결성 원칙
+중요: 모든 분석 결과는 실제 CSV 데이터에 기반합니다.
 
-Gradient: Blue → Purple → Pink
+✅ 월별 매출 추이: 실제 5-8월 결제 및 재방문 데이터
 
-Glassmorphism: blur + transparency
+✅ 재방문율 코호트: 실제 6-8월, 90일 재방문 데이터
 
-Mobile First
+✅ 지역별 분석: 실제 지역-연령별 집계 데이터
 
-Framer Motion 기반 부드러운 애니메이션
+✅ 연령대별 분석: 실제 연령대별 이용 패턴 데이터
 
-📁 CSV 데이터 형식
-사용자_ID, 지역_도시, 연령대, 나이, 방문일수,
-총_이용시간(분), 평균_이용시간(분),
-5월_총결제금액, 6월_재방문여부, 7월_재방문여부,
-8월_재방문여부, 90일_재방문여부
+✅ 상관관계: 실제 이용시간-결제금액 데이터
+
+가짜 데이터 사용 금지: 어떤 경우에도 임의 생성 데이터를 사용하지 않습니다.
+
+🗺️ Kakao Maps API 연동
+설정 방법
+Kakao Developers에서 애플리케이션 생성
+
+JavaScript 키 발급
+
+[플랫폼 설정] > [Web] > **[사이트 도메인]**에 개발 환경 주소 등록
+
+로컬 환경: http://localhost:3000
+
+주의: localhost가 아닌 다른 IP 주소나 도메인으로 접속할 경우, 해당 주소도 반드시 추가해야 합니다.
+
+카카오맵 사용 설정 활성화 (필수!)
+
+주요 기능
+키워드 검색: Places API를 사용한 장소 검색
+
+마커 표시: 추천 입지 위치 시각화
+
+인포윈도우: 클릭 시 상세 정보 표시
+
+자동 범위 조정: 모든 마커가 보이도록 자동 줌
 
 🚧 주의사항
+CSV 데이터 형식
+분석을 위한 CSV 파일은 다음 컬럼을 포함해야 합니다:
 
-표본 5명 미만 지역 제외
-
-산점도 최대 150개 포인트
-
-useMemo로 계산 최적화
+사용자_ID, 지역_도시, 연령대, 나이, 방문일수,
+총_이용시간(분), 평균_이용시간(분), 5월_총결제금액,
+6월_재방문여부, 7월_재방문여부, 8월_재방문여부, 90일_재방문여부
