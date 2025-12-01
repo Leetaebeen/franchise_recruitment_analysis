@@ -2,23 +2,28 @@
 
 import { useState, useEffect, useRef } from "react"
 import Papa from "papaparse"
-import KakaoMap from "@/components/kakao-map"
+import { motion } from "framer-motion"
+import Link from "next/link"
 import { ArrowRight, MapPin, ChevronDown, Trophy, Zap, PieChart } from "lucide-react"
+
+// UI 컴포넌트 임포트
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AnalysisDashboard } from "@/components/analysis-dashboard"
-import { motion } from "framer-motion"
-import Link from "next/link"
+import KakaoMap from "@/components/kakao-map"
 
 export default function PcBangFranchisePage() {
+  // --- State 관리 ---
   const [activeSection, setActiveSection] = useState("hero")
-  const [data, setData] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-  const [fileUploaded, setFileUploaded] = useState(false)
-  const [analysis, setAnalysis] = useState<any | null>(null)
-  const resultsRef = useRef<HTMLDivElement>(null)
-  const [isScrolled, setIsScrolled] = useState(false)
+  const [data, setData] = useState<any[]>([]) // CSV 원본 데이터
+  const [loading, setLoading] = useState(false) // 로딩 상태
+  const [fileUploaded, setFileUploaded] = useState(false) // 업로드 여부
+  const [analysis, setAnalysis] = useState<any | null>(null) // 분석 결과 데이터
+  const [isScrolled, setIsScrolled] = useState(false) // 스크롤 감지
 
+  const resultsRef = useRef<HTMLDivElement>(null)
+
+  // 스크롤 이벤트 리스너 (헤더 스타일 변경용)
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
@@ -27,18 +32,22 @@ export default function PcBangFranchisePage() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  // --- CSV 파싱 함수 ---
   const parseCSV = (csvText: string) => {
     const parsed = Papa.parse(csvText, {
       header: true,
       skipEmptyLines: true,
-      dynamicTyping: true,
+      dynamicTyping: true, // 숫자를 자동으로 Number 타입으로 변환
     })
     if (parsed && parsed.data) return parsed.data as any[]
     return []
   }
 
+  // --- [핵심] 파일 업로드 핸들러 (데이터 변환 로직 포함) ---
   const handleFileUpload = (event: any) => {
     let file: File | null = null
+    
+    // 파일 객체 추출 (드래그앤드롭 또는 input 클릭 대응)
     if (event?.target?.files) {
       file = event.target.files[0]
     } else if (event instanceof File) {
@@ -56,18 +65,41 @@ export default function PcBangFranchisePage() {
       const csvData = e.target?.result as string
       const parsedData = parseCSV(csvData)
 
-      const processedData = (parsedData || []).filter(
+      // 👇 [수정됨] 영어 컬럼명을 한글로 변환하는 '데이터 통역' 과정
+      // CSV 파일이 영어로 되어 있어도 코드가 이해할 수 있도록 한글 키로 매핑합니다.
+      const mappedData = parsedData.map((row) => ({
+        ...row, // 기존 데이터 유지
+        "지역_도시": row["region_city"] || row["지역_도시"],
+        "연령대": row["age_group"] || row["연령대"],
+        "나이": row["age"] || row["나이"],
+        "방문일수": row["visit_days"] || row["방문일수"],
+        "총_이용시간(분)": row["total_duration_min"] || row["총_이용시간(분)"],
+        "평균_이용시간(분)": row["avg_duration_min"] || row["평균_이용시간(분)"],
+        "5월_총결제금액": row["total_payment_may"] || row["5월_총결제금액"],
+        "6월_재방문여부": row["retained_june"] || row["6월_재방문여부"],
+        "7월_재방문여부": row["retained_july"] || row["7월_재방문여부"],
+        "8월_재방문여부": row["retained_august"] || row["8월_재방문여부"],
+        "90일_재방문여부": row["retained_90"] || row["90일_재방문여부"],
+        "사용자_ID": row["uid"] || row["사용자_ID"]
+      }))
+
+      // 유효한 데이터만 필터링 (필수 필드가 있는 경우만)
+      const processedData = mappedData.filter(
         (row) =>
           row["지역_도시"] &&
           row["연령대"] &&
           (typeof row["총_이용시간(분)"] === "number" || !isNaN(Number(row["총_이용시간(분)"]))),
       )
 
+      // 상태 업데이트
       setData(processedData)
       setFileUploaded(true)
+      
+      // 데이터 분석 실행
       analyzeData(processedData)
       setLoading(false)
 
+      // 분석 결과 섹션으로 자동 스크롤
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth" })
       }, 500)
@@ -76,6 +108,7 @@ export default function PcBangFranchisePage() {
     reader.readAsText(file, "utf-8")
   }
 
+  // --- 데이터 분석 로직 (지역별/연령별 그룹화) ---
   const analyzeData = (rawData: any[]) => {
     const groupedData: any = {}
 
@@ -86,6 +119,8 @@ export default function PcBangFranchisePage() {
       if (!region || !ageGroup) return
 
       const key = `${region}-${ageGroup}`
+      
+      // 그룹 초기화
       if (!groupedData[key]) {
         groupedData[key] = {
           region: region,
@@ -98,6 +133,7 @@ export default function PcBangFranchisePage() {
         }
       }
 
+      // 데이터 집계
       const usage = Number(row["총_이용시간(분)"]) || 0
       const avgUsage = Number(row["평균_이용시간(분)"]) || 0
       const payment = Number(row["5월_총결제금액"]) || 0
@@ -110,13 +146,12 @@ export default function PcBangFranchisePage() {
       groupedData[key].count++
     })
 
+    // 그룹화된 데이터를 배열로 변환 및 통계 계산
     const regionAgeData = Object.values(groupedData)
-      .filter((group: any) => group.count > (fileUploaded ? 5 : 0))
+      .filter((group: any) => group.count > (fileUploaded ? 5 : 0)) // 표본이 너무 적은 그룹 제외
       .map((group: any) => {
-        // 평균 사용자당 결제금액
         const avgPaymentPerUser = Math.round(group.totalPayment / group.count)
-        // 예상 월 매출: 사용자 수가 많은 지역일수록 높은 매출 예상
-        // 실제 PC방 월 매출 추정: 평균 결제액 * 표본 수 * 30 (일 기준으로 환산)
+        // 예상 매출 계산 로직 (단순 예시)
         const estimatedMonthlyRevenue = Math.round(avgPaymentPerUser * Math.max(group.count, 50) * 30)
 
         return {
@@ -125,7 +160,7 @@ export default function PcBangFranchisePage() {
           totalUsage: Math.round(group.totalUsage / group.count),
           avgUsage: Math.round(group.avgUsageSum / group.count),
           avgPaymentPerUser: avgPaymentPerUser,
-          totalPayment: estimatedMonthlyRevenue, // 예상 월 매출로 변경
+          totalPayment: estimatedMonthlyRevenue, // 예상 월 매출
           revisitRate: Math.round((group.revisitSum / group.count) * 100),
           sampleCount: group.count,
         }
@@ -142,6 +177,7 @@ export default function PcBangFranchisePage() {
     })
   }
 
+  // --- 추천 시스템 로직 (지역 추천) ---
   const generateRecommendations = (topPerformers: any[]) => {
     const locationMap: any = {
       "서울-20대": ["홍익대학교", "성수역", "강남역"],
@@ -160,7 +196,6 @@ export default function PcBangFranchisePage() {
 
     return topPerformers.map((rec: any, i: number) => {
       const key = `${rec.region}-${rec.ageGroup}`
-      // fallback: "지역명역" 또는 "지역명시청"으로 더 구체적인 장소 제공
       const fallbackLocations = [`${rec.region}역`, `${rec.region}시청`, `${rec.region} PC방`]
       const locations = locationMap[key] || fallbackLocations
 
@@ -173,6 +208,7 @@ export default function PcBangFranchisePage() {
     })
   }
 
+  // --- 마케팅 지원 패키지 생성 ---
   const generateSupportPackage = (performer: any) => {
     const packages = []
     if (performer.ageGroup === "20대") {
@@ -191,8 +227,11 @@ export default function PcBangFranchisePage() {
     return packages
   }
 
+  // --- 렌더링 (UI) ---
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 text-slate-900 selection:bg-blue-600 selection:text-white overflow-x-hidden font-sans">
+      
+      {/* 1. Header (Navigation) */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-white/90 backdrop-blur-xl shadow-xl border-b border-blue-100/50 py-4" : "bg-transparent py-6"}`}
       >
@@ -211,7 +250,7 @@ export default function PcBangFranchisePage() {
         </div>
       </header>
 
-      {/* Hero Section */}
+      {/* 2. Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-white via-blue-50/50 to-purple-50/50 pt-20">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-500/20 via-purple-500/10 to-transparent"></div>
@@ -292,6 +331,7 @@ export default function PcBangFranchisePage() {
         </div>
       </section>
 
+      {/* 3. Features Section */}
       <section className="py-24 bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 border-b border-blue-100/30 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5"></div>
 
@@ -324,6 +364,7 @@ export default function PcBangFranchisePage() {
         </div>
       </section>
 
+      {/* 4. Analysis Dashboard Section (데이터 분석) */}
       <section id="analysis-section" className="py-32 relative bg-gradient-to-br from-slate-50 via-blue-50/40 to-purple-50/40 overflow-hidden" ref={resultsRef}>
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5"></div>
         <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"></div>
@@ -347,10 +388,12 @@ export default function PcBangFranchisePage() {
             </p>
           </div>
 
+          {/* 분석 컴포넌트: 파일 업로드 및 차트 표시 */}
           <AnalysisDashboard analysis={analysis} rawData={data} onFileUpload={handleFileUpload} />
         </div>
       </section>
 
+      {/* 5. Map Recommendation Section (지도 추천) */}
       <section className="py-32 bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5"></div>
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-br from-blue-100/30 to-purple-100/30 skew-x-12 transform translate-x-20"></div>
@@ -419,6 +462,7 @@ export default function PcBangFranchisePage() {
         </div>
       </section>
 
+      {/* 6. Call to Action (하단 배너) */}
       <section className="py-32 relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-purple-950 text-white">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
@@ -469,6 +513,7 @@ export default function PcBangFranchisePage() {
         </div>
       </section>
 
+      {/* 7. Footer */}
       <footer className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-purple-950 text-slate-300 py-16 border-t border-blue-900/30 overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5"></div>
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>

@@ -39,7 +39,25 @@ const COLORS = ["#8b5cf6", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#ec4899"
 
 export function AnalysisDashboard({ analysis, rawData, onFileUpload }: AnalysisDashboardProps) {
   const chartData = useMemo(() => {
-    if (!analysis) return null
+    if (!analysis || !rawData) return null
+
+    // 👇 [핵심 수정] 1. 영어 데이터를 한글 키로 변환 (통역기)
+    const processedRawData = rawData.map((row) => ({
+      ...row, // 기존 데이터 유지
+      // 영어 키가 있으면 한글 키로 매핑, 없으면 원래 한글 키 사용
+      "사용자_ID": row["uid"] || row["사용자_ID"],
+      "지역_도시": row["region_city"] || row["지역_도시"],
+      "연령대": row["age_group"] || row["연령대"],
+      "나이": row["age"] || row["나이"],
+      "방문일수": row["visit_days"] || row["방문일수"],
+      "총_이용시간(분)": row["total_duration_min"] || row["총_이용시간(분)"],
+      "평균_이용시간(분)": row["avg_duration_min"] || row["평균_이용시간(분)"],
+      "5월_총결제금액": row["total_payment_may"] || row["5월_총결제금액"],
+      "6월_재방문여부": row["retained_june"] || row["6월_재방문여부"],
+      "7월_재방문여부": row["retained_july"] || row["7월_재방문여부"],
+      "8월_재방문여부": row["retained_august"] || row["8월_재방문여부"],
+      "90일_재방문여부": row["retained_90"] || row["90일_재방문여부"],
+    }))
 
     // 월별 추이 데이터 (5-8월 재방문 데이터 기반) - 실제 데이터 기반
     const monthlyTrend = []
@@ -51,7 +69,8 @@ export function AnalysisDashboard({ analysis, rawData, onFileUpload }: AnalysisD
       let revisitCount = 0
       let totalCount = 0
 
-      rawData.forEach((row) => {
+      // 👇 [수정] 변환된 데이터(processedRawData) 사용
+      processedRawData.forEach((row) => {
         if (i === 0) {
           totalRevenue += Number(row["5월_총결제금액"]) || 0
         } else {
@@ -79,7 +98,8 @@ export function AnalysisDashboard({ analysis, rawData, onFileUpload }: AnalysisD
       let revisitSum = 0
       let totalCount = 0
 
-      rawData.forEach((row) => {
+      // 👇 [수정] 변환된 데이터 사용
+      processedRawData.forEach((row) => {
         const key = period === "90일" ? "90일_재방문여부" : `${period}_재방문여부`
         revisitSum += Number(row[key]) || 0
         totalCount++
@@ -92,7 +112,8 @@ export function AnalysisDashboard({ analysis, rawData, onFileUpload }: AnalysisD
       })
     })
 
-    // 지역별 상세 분석 (매출, 재방문율, 이용시간)
+    // 지역별 상세 분석 (analysis prop은 부모에서 넘어오므로 그대로 유지)
+    // 주의: analysis 객체도 부모 컴포넌트에서 영어->한글 변환이 안 되어 있다면 비어있을 수 있습니다.
     const regionalDetail = analysis.regionAge
       .reduce((acc: any[], curr: any) => {
         const existing = acc.find((item) => item.name === curr.region)
@@ -163,7 +184,8 @@ export function AnalysisDashboard({ analysis, rawData, onFileUpload }: AnalysisD
     return {
       regionData: regionalDetail,
       ageData: ageDetail,
-      scatterData: rawData.slice(0, 150).map((row) => ({
+      // 👇 [수정] 변환된 데이터 사용 (Scatter Chart)
+      scatterData: processedRawData.slice(0, 150).map((row) => ({
         x: Number(row["총_이용시간(분)"]) || 0,
         y: Number(row["5월_총결제금액"]) || 0,
         z: Number(row["방문일수"]) || 1,
@@ -556,62 +578,62 @@ export function AnalysisDashboard({ analysis, rawData, onFileUpload }: AnalysisD
 
       {/* 연령대별 고객 분석 */}
       <Card className="shadow-xl border-none ring-1 ring-pink-100 bg-gradient-to-br from-white to-pink-50/30">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
-                  연령대별 고객 분석
-                </CardTitle>
-                <CardDescription>주요 타겟 고객층의 이용 패턴과 매출 기여도입니다.</CardDescription>
-              </div>
-              <Badge className="bg-gradient-to-r from-pink-500 to-rose-500 text-white border-none">
-                Demographics
-              </Badge>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
+                연령대별 고객 분석
+              </CardTitle>
+              <CardDescription>주요 타겟 고객층의 이용 패턴과 매출 기여도입니다.</CardDescription>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[350px] min-h-[350px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData.ageData}>
-                  <defs>
-                    <linearGradient id="ageGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ec4899" stopOpacity={0.9} />
-                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.7} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 12, fontWeight: 600 }} />
-                  <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "none",
-                      boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                      background: "rgba(255,255,255,0.95)",
-                      backdropFilter: "blur(10px)",
-                    }}
-                    formatter={(value: number, name: string) => {
-                      if (name === "revenue") return [`${value.toLocaleString()}만원`, "예상 매출"]
-                      if (name === "avgUsage") return [`${value}분`, "평균 이용시간"]
-                      if (name === "revisitRate") return [`${value}%`, "재방문율"]
-                      return [value, name]
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="revenue" name="예상 매출(만원)" fill="url(#ageGradient)" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="revisitRate" name="재방문율(%)" fill="#10b981" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-6 p-4 bg-pink-50/50 rounded-xl border border-pink-100">
-              <p className="text-sm text-slate-700 leading-relaxed">
-                <span className="font-bold text-pink-600">📊 분석 설명:</span> 연령대별 매출 기여도와 재방문율을 보여줍니다.
-                20-30대는 높은 이용률과 장시간 체류로 주수익원이며, 40대 이상은 낮 시간대 활용에 유리합니다.
-                타겟 연령층에 맞는 게임 라인업과 마케팅 전략이 성공의 핵심입니다.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            <Badge className="bg-gradient-to-r from-pink-500 to-rose-500 text-white border-none">
+              Demographics
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[350px] min-h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData.ageData}>
+                <defs>
+                  <linearGradient id="ageGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ec4899" stopOpacity={0.9} />
+                    <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.7} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 12, fontWeight: 600 }} />
+                <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
+                    background: "rgba(255,255,255,0.95)",
+                    backdropFilter: "blur(10px)",
+                  }}
+                  formatter={(value: number, name: string) => {
+                    if (name === "revenue") return [`${value.toLocaleString()}만원`, "예상 매출"]
+                    if (name === "avgUsage") return [`${value}분`, "평균 이용시간"]
+                    if (name === "revisitRate") return [`${value}%`, "재방문율"]
+                    return [value, name]
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="revenue" name="예상 매출(만원)" fill="url(#ageGradient)" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="revisitRate" name="재방문율(%)" fill="#10b981" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-6 p-4 bg-pink-50/50 rounded-xl border border-pink-100">
+            <p className="text-sm text-slate-700 leading-relaxed">
+              <span className="font-bold text-pink-600">📊 분석 설명:</span> 연령대별 매출 기여도와 재방문율을 보여줍니다.
+              20-30대는 높은 이용률과 장시간 체류로 주수익원이며, 40대 이상은 낮 시간대 활용에 유리합니다.
+              타겟 연령층에 맞는 게임 라인업과 마케팅 전략이 성공의 핵심입니다.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* 이용시간 vs 결제금액 상관관계 */}
       <Card className="shadow-xl border-none ring-1 ring-indigo-100 bg-gradient-to-br from-white to-indigo-50/30">
