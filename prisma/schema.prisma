@@ -1,0 +1,51 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. 회원 정보 테이블 (나중에 로그인 기능용)
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("USER") // ADMIN, USER
+  createdAt DateTime @default(now())
+}
+
+// 2. 가맹점 상권 분석 데이터 (CSV 파일 내용 저장소)
+model AnalysisData {
+  id               Int     @id @default(autoincrement())
+  uid              Int     // 사용자 ID
+  regionCity       String  // 지역_도시
+  ageGroup         String  // 연령대
+  age              Int     // 나이
+  visitDays        Int     // 방문일수
+  totalDurationMin Int     // 총_이용시간
+  avgDurationMin   Int     // 평균_이용시간
+  totalPaymentMay  Int     // 5월_총결제금액
+  retainedJune     Int     // 6월_재방문여부
+  retainedJuly     Int     // 7월_재방문여부
+  retainedAugust   Int     // 8월_재방문여부
+  retained90       Int     // 90일_재방문여부
+
+  @@index([regionCity]) // 검색 속도 향상
+}
+
+// 3. 상담 신청 내역 (사용자가 입력한 폼 저장소)
+model Consultation {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String
+  area      String
+  budget    String
+  inquiry   String?  @db.Text
+  status    String   @default("PENDING") // 처리상태
+  createdAt DateTime @default(now())
+}

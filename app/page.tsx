@@ -110,7 +110,7 @@ export default function PcBangFranchisePage() {
 
   // --- 데이터 분석 로직 (지역별/연령별 그룹화) ---
   const analyzeData = (rawData: any[]) => {
-    const groupedData: any = {}
+    const groupedData: any   = {}
 
     rawData.forEach((row) => {
       const region = row["지역_도시"]?.toString().trim()
