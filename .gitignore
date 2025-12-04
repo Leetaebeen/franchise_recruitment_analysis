@@ -49,3 +49,5 @@ Thumbs.db
 /lib/generated/prisma
 
 data.csv
+
+uploads

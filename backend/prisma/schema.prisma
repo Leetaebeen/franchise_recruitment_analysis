@@ -1,0 +1,52 @@
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. 회원 정보 테이블 (수정됨: 아이디/비번 방식)
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String?  @unique // 👈 [수정] 기본 로그인 유저만 사용 (Optional로 변경)
+  googleId  String?  @unique // 👈 [추가] 구글 로그인 유저 ID
+  password  String?  // 👈 [수정] 구글 유저는 비번 불필요 (Optional로 변경)
+  email     String?  @unique // 👈 [추가] 구글 유저 이메일
+  role      String   @default("USER") 
+  createdAt DateTime @default(now())
+}
+
+// 2. 가맹점 상권 분석 데이터 (기존 유지)
+model AnalysisData {
+  id               Int     @id @default(autoincrement())
+  uid              Int     
+  regionCity       String  
+  ageGroup         String  
+  age              Int     
+  visitDays        Int     
+  totalDurationMin Int     
+  avgDurationMin   Int     
+  totalPaymentMay  Int     
+  retainedJune     Int     
+  retainedJuly     Int     
+  retainedAugust   Int     
+  retained90       Int     
+
+  @@index([regionCity])
+}
+
+// 3. 상담 신청 내역 (기존 유지)
+model Consultation {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String
+  area      String
+  budget    String
+  inquiry   String?  @db.Text
+  status    String   @default("PENDING") 
+  createdAt DateTime @default(now())
+}
