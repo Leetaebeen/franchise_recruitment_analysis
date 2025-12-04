@@ -3,7 +3,7 @@
 import * as React from 'react'
 import * as RechartsPrimitive from 'recharts'
 
-import { cn } from '@/app/lib/utils'
+import { cn } from '@/lib/utils'
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: '', dark: '.dark' } as const
@@ -56,7 +56,7 @@ function ChartContainer({
         data-chart={chartId}
         className={cn(
           "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border flex aspect-video justify-center text-xs [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
-          className,
+          className
         )}
         {...props}
       >
@@ -71,7 +71,7 @@ function ChartContainer({
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
-    ([, config]) => config.theme || config.color,
+    ([, config]) => config.theme || config.color
   )
 
   if (!colorConfig.length) {
@@ -94,7 +94,7 @@ ${colorConfig
   })
   .join('\n')}
 }
-`,
+`
           )
           .join('\n'),
       }}
@@ -104,6 +104,7 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
+// 수정: RechartsPrimitive 타입을 제거하고, 필요한 Props를 직접 명시하여 타입 에러 방지
 function ChartTooltipContent({
   active,
   payload,
@@ -118,14 +119,20 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-  React.ComponentProps<'div'> & {
-    hideLabel?: boolean
-    hideIndicator?: boolean
-    indicator?: 'line' | 'dot' | 'dashed'
-    nameKey?: string
-    labelKey?: string
-  }) {
+}: React.ComponentProps<'div'> & {
+  active?: boolean
+  payload?: any[]
+  indicator?: 'line' | 'dot' | 'dashed'
+  hideLabel?: boolean
+  hideIndicator?: boolean
+  label?: any
+  labelFormatter?: (label: any, payload: any[]) => React.ReactNode
+  labelClassName?: string
+  formatter?: (value: any, name: any, item: any, index: number, payload: any) => React.ReactNode
+  color?: string
+  nameKey?: string
+  labelKey?: string
+}) {
   const { config } = useChart()
 
   const tooltipLabel = React.useMemo(() => {
@@ -174,12 +181,12 @@ function ChartTooltipContent({
     <div
       className={cn(
         'border-border/50 bg-background grid min-w-[8rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl',
-        className,
+        className
       )}
     >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
-        {payload.map((item, index) => {
+        {payload.map((item: any, index: number) => {
           const key = `${nameKey || item.name || item.dataKey || 'value'}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
           const indicatorColor = color || item.payload.fill || item.color
@@ -189,7 +196,7 @@ function ChartTooltipContent({
               key={item.dataKey}
               className={cn(
                 '[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5',
-                indicator === 'dot' && 'items-center',
+                indicator === 'dot' && 'items-center'
               )}
             >
               {formatter && item?.value !== undefined && item.name ? (
@@ -209,7 +216,7 @@ function ChartTooltipContent({
                             'w-0 border-[1.5px] border-dashed bg-transparent':
                               indicator === 'dashed',
                             'my-0.5': nestLabel && indicator === 'dashed',
-                          },
+                          }
                         )}
                         style={
                           {
@@ -223,7 +230,7 @@ function ChartTooltipContent({
                   <div
                     className={cn(
                       'flex flex-1 justify-between leading-none',
-                      nestLabel ? 'items-end' : 'items-center',
+                      nestLabel ? 'items-end' : 'items-center'
                     )}
                   >
                     <div className="grid gap-1.5">
@@ -250,15 +257,18 @@ function ChartTooltipContent({
 
 const ChartLegend = RechartsPrimitive.Legend
 
+// 수정: payload 타입을 명시적으로 추가하고, map 내부 item에 any 타입 적용
 function ChartLegendContent({
   className,
   hideIcon = false,
   payload,
   verticalAlign = 'bottom',
   nameKey,
-}: React.ComponentProps<'div'> &
-  Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
+}: React.ComponentProps<'div'> & {
+    // Recharts LegendProps와 별개로 우리가 쓸 props 직접 정의
     hideIcon?: boolean
+    payload?: any[]
+    verticalAlign?: 'top' | 'middle' | 'bottom'
     nameKey?: string
   }) {
   const { config } = useChart()
@@ -272,10 +282,10 @@ function ChartLegendContent({
       className={cn(
         'flex items-center justify-center gap-4',
         verticalAlign === 'top' ? 'pb-3' : 'pt-3',
-        className,
+        className
       )}
     >
-      {payload.map((item) => {
+      {payload.map((item: any) => {
         const key = `${nameKey || item.dataKey || 'value'}`
         const itemConfig = getPayloadConfigFromPayload(config, item, key)
 
