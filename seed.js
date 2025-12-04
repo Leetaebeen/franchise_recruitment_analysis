@@ -1,4 +1,5 @@
 // seed.js (수정버전: 안전장치 추가)
+require('dotenv').config();
 
 const fs = require('fs');
 const path = require('path');
