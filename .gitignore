@@ -1,53 +1,54 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+--- Dependencies (모든 폴더 적용) ---
 
-# dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp
 .pnp.js
 .yarn/install-state.gz
 
-# testing
-/coverage
+--- Frontend (Next.js) ---
 
-# next.js
-/.next/
-/out/
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
 
-# production
-/build
+--- Backend (NestJS) ---
 
-# misc
-.DS_Store
-*.pem
+dist/
 
-# debug
+NestJS 빌드 결과물인 dist 폴더 무시 필수
+
+--- Environment Variables (보안) ---
+
+.env
+.env*.local
+.env.*
+!.env.example
+
+--- Logs & OS Files ---
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# local env files
-.env*.local
-.env
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# IDE
-.vscode
-.idea
+logs/
+*.log
+.DS_Store
+Thumbs.db
 *.swp
 *.swo
-*~
 
-# OS
-Thumbs.db
+--- IDE Settings ---
 
-/lib/generated/prisma
+.vscode/
+.idea/
+
+--- Project Specific ---
 
 data.csv
+uploads/
 
-uploads
+Prisma (위치에 따라 경로 수정 필요할 수 있음)
+
+/frontend/lib/generated/prisma
+/backend/prisma/generated
