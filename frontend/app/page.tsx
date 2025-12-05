@@ -11,12 +11,37 @@ export default function LandingPage() {
   const router = useRouter()
   const [username, setUsername] = useState<string | null>(null)
 
-  // 페이지 로드 시 로그인 여부 확인
+  // 페이지 로드 시 로그인 여부 확인 (토큰 유효성 검사 포함)
   useEffect(() => {
-    const user = Cookies.get("username")
-    if (user) {
-      setUsername(user)
+    const checkAuth = async () => {
+      const user = Cookies.get("username")
+      const token = Cookies.get("accessToken")
+
+      if (user && token) {
+        try {
+          // 백엔드에 토큰 유효성 검사 요청
+          const res = await fetch('http://localhost:8000/auth/verify', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (res.ok) {
+            setUsername(user)
+          } else {
+            // 토큰이 유효하지 않음 (서버 재시작 등) -> 조용히 로그아웃 처리
+            Cookies.remove("accessToken")
+            Cookies.remove("username")
+            setUsername(null)
+          }
+        } catch (e) {
+          // 서버 연결 실패 시 -> 로그아웃 처리
+          Cookies.remove("accessToken")
+          Cookies.remove("username")
+          setUsername(null)
+        }
+      }
     }
+    
+    checkAuth();
   }, [])
 
   // 로그아웃 핸들러

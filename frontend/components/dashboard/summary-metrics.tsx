@@ -11,9 +11,10 @@ interface SummaryMetricsProps {
   expectedRevenue: number
   avgUsage: number
   topRegion: string
+  topRegionRevenue: number
 }
 
-export function SummaryMetrics({ rawDataCount, expectedRevenue, avgUsage, topRegion }: SummaryMetricsProps) {
+export function SummaryMetrics({ rawDataCount, expectedRevenue, avgUsage, topRegion, topRegionRevenue }: SummaryMetricsProps) {
   const stats = [
     {
       title: "총 분석 데이터",
@@ -45,7 +46,7 @@ export function SummaryMetrics({ rawDataCount, expectedRevenue, avgUsage, topReg
     {
       title: "최고 추천 지역",
       value: topRegion,
-      sub: "성공 확률 94%",
+      sub: `객단가 1위 (${topRegionRevenue.toLocaleString()}원)`,
       icon: Award,
       color: "text-rose-600",
       bg: "bg-rose-50",

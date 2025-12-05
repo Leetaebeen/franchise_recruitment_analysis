@@ -3,6 +3,7 @@
 "use client"
 
 import { useMemo } from "react"
+import { translateRegion } from "@/lib/utils"
 
 export function useAnalysisData(analysis: any, rawData: any[]) {
   return useMemo(() => {
@@ -12,17 +13,17 @@ export function useAnalysisData(analysis: any, rawData: any[]) {
     const processedRawData = rawData.map((row) => ({
       ...row,
       "사용자_ID": row["uid"] || row["사용자_ID"],
-      "지역_도시": row["region_city"] || row["지역_도시"],
-      "연령대": row["age_group"] || row["연령대"],
+      "지역_도시": row["regionCity"] || row["region_city"] || row["지역_도시"],
+      "연령대": row["ageGroup"] || row["age_group"] || row["연령대"],
       "나이": row["age"] || row["나이"],
-      "방문일수": row["visit_days"] || row["방문일수"],
-      "총_이용시간(분)": row["total_duration_min"] || row["총_이용시간(분)"],
-      "평균_이용시간(분)": row["avg_duration_min"] || row["평균_이용시간(분)"],
-      "5월_총결제금액": row["total_payment_may"] || row["5월_총결제금액"],
-      "6월_재방문여부": row["retained_june"] || row["6월_재방문여부"],
-      "7월_재방문여부": row["retained_july"] || row["7월_재방문여부"],
-      "8월_재방문여부": row["retained_august"] || row["8월_재방문여부"],
-      "90일_재방문여부": row["retained_90"] || row["90일_재방문여부"],
+      "방문일수": row["visitDays"] || row["visit_days"] || row["방문일수"],
+      "총_이용시간(분)": row["totalDurationMin"] || row["total_duration_min"] || row["총_이용시간(분)"],
+      "평균_이용시간(분)": row["avgDurationMin"] || row["avg_duration_min"] || row["평균_이용시간(분)"],
+      "5월_총결제금액": row["totalPaymentMay"] || row["total_payment_may"] || row["5월_총결제금액"],
+      "6월_재방문여부": row["retainedJune"] || row["retained_june"] || row["6월_재방문여부"],
+      "7월_재방문여부": row["retainedJuly"] || row["retained_july"] || row["7월_재방문여부"],
+      "8월_재방문여부": row["retainedAugust"] || row["retained_august"] || row["8월_재방문여부"],
+      "90일_재방문여부": row["retained90"] || row["retained_90"] || row["90일_재방문여부"],
     }))
 
     // ✅ [핵심 수정] 예상 월 매출 재계산 로직
@@ -99,7 +100,7 @@ export function useAnalysisData(analysis: any, rawData: any[]) {
         return acc
       }, [])
       .map((item: any) => ({
-        name: item.name,
+        name: translateRegion(item.name),
         revenue: Math.round(item.revenue / 10000), // 만원 단위
         revisitRate: Math.round(item.revisitRate),
         usage: Math.round(item.usage / item.count),
@@ -140,7 +141,7 @@ export function useAnalysisData(analysis: any, rawData: any[]) {
 
     // 레이더 차트 데이터
     const radarData = analysis.bestPerformers.slice(0, 5).map((p: any) => ({
-      subject: p.region.length > 4 ? p.region.slice(0, 4) : p.region,
+      subject: translateRegion(p.region),
       매출: Math.round(p.totalPayment / 100000) / 10, // 백만원 단위
       이용시간: Math.round(p.totalUsage / 10), // 10분 단위
       재방문율: p.revisitRate,

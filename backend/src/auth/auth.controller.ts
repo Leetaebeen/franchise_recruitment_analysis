@@ -13,6 +13,12 @@ export class AuthController {
     return this.authService.signIn(signInDto.username, signInDto.password);
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Get('verify')
+  verify() {
+    return { valid: true };
+  }
+
   // 1. 구글 로그인 시작
   @Get('google')
   @UseGuards(AuthGuard('google'))

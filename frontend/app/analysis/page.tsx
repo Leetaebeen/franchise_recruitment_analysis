@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { fetchWithAuth } from "@/lib/api"
 import { ArrowLeft, Brain, CheckCircle2, Database, Map, ServerCog, Upload } from "lucide-react"
 import Link from "next/link"
 
@@ -15,7 +16,7 @@ const ANALYSIS_STEPS = [
   { message: "지역별 매출 시뮬레이션 완료.", icon: Map },
 ]
 
-export default function AnalysisPage() {
+export default function AnalysisPage({ onSuccess }: { onSuccess?: () => void }) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -41,8 +42,8 @@ export default function AnalysisPage() {
     try {
       simulateProgress() // 애니메이션 시작
 
-      // 백엔드 API 호출
-      const res = await fetch("http://localhost:8000/analysis/upload", {
+      // 백엔드 API 호출 (전역 래퍼 사용)
+      const res = await fetchWithAuth("http://localhost:8000/analysis/upload", {
         method: "POST",
         body: formData,
       })
@@ -52,9 +53,13 @@ export default function AnalysisPage() {
       const result = await res.json()
       console.log("분석 성공:", result)
 
-      // 분석 완료 후 1초 뒤 대시보드로 이동
+      // 분석 완료 후 1초 뒤 이동
       setTimeout(() => {
-        router.push("/dashboard")
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          router.push("/dashboard")
+        }
       }, 1000)
 
     } catch (error) {
