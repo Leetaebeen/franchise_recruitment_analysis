@@ -124,7 +124,3 @@ franchise-recruitment-analysis/
 │   ├── lib/                   # 유틸리티 및 API 설정
 │   └── public/                # 정적 파일
 ```
-
-## 📝 라이선스
-
-This project is private and proprietary.
